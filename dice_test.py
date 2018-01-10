@@ -1,0 +1,315 @@
+import unittest
+
+from dice import dice
+
+
+# Data adapted from https://github.com/exercism/python/blob/master/config.json
+data = [
+    {
+        "uuid": "f458c48a-4a05-4809-9168-8edd55179349",
+        "slug": "hello-world",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 2,
+        "topics": [
+            "conditionals",
+            "optional_values",
+            "text_formatting"
+        ]
+    },
+    {
+        "uuid": "b6acda85-5f62-4d9c-bb4f-42b7a360355a",
+        "slug": "leap",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 1,
+        "topics": [
+            "conditionals",
+            "booleans",
+            "logic"
+        ]
+    },
+    {
+        "uuid": "d39f86fe-db56-461c-8a93-d87058af8366",
+        "slug": "reverse-string",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 8,
+        "topics": [
+            "strings"
+        ]
+    },
+    {
+        "uuid": "d1a98c79-d3cc-4035-baab-0e334d2b6a57",
+        "slug": "isogram",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 4,
+        "topics": [
+            "conditionals",
+            "loops",
+            "strings",
+            "algorithms"
+        ]
+    },
+    {
+        "uuid": "bebf7ae6-1c35-48bc-926b-e053a975eb10",
+        "slug": "pangram",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 4,
+        "topics": [
+            "loops",
+            "conditionals",
+            "strings",
+            "algorithms",
+            "filtering",
+            "logic"
+        ]
+    },
+    {
+        "uuid": "dc2917d5-aaa9-43d9-b9f4-a32919fdbe18",
+        "slug": "word-search",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 6,
+        "topics": [
+            "strings",
+            "searching"
+        ]
+    },
+    {
+        "uuid": "af50bb9a-e400-49ce-966f-016c31720be1",
+        "slug": "wordy",
+        "core": False,
+        "unlocked_by": None,
+        "difficulty": 8,
+        "topics": [
+            "logic",
+            "pattern_matching",
+            "mathematics",
+        ]
+    },
+]
+
+
+class TestDice(unittest.TestCase):
+    def setUp(self):
+        self.maxDiff = 1300
+
+    def test_single_key(self):
+        schema = {
+            "keys": ["slug"]
+        }
+        expected = [
+            'hello-world',
+            'leap',
+            'reverse-string',
+            'isogram',
+            'pangram',
+            'word-search',
+            'wordy'
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_multiple_keys(self):
+        schema = {
+            "keys": ['slug', 'difficulty']
+        }
+        expected = [
+            {'slug': 'hello-world', 'difficulty': 2},
+            {'slug': 'leap', 'difficulty': 1},
+            {'slug': 'reverse-string', 'difficulty': 8},
+            {'slug': 'isogram', 'difficulty': 4},
+            {'slug': 'pangram', 'difficulty': 4},
+            {'slug': 'word-search', 'difficulty': 6},
+            {'slug': 'wordy', 'difficulty': 8}
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_single_sort_key(self):
+        schema = {
+            "keys": ['slug'],
+            "sort": ["difficulty"]
+        }
+        expected = [
+            'leap',
+            'hello-world',
+            'isogram',
+            'pangram',
+            'word-search',
+            'reverse-string',
+            'wordy'
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_reverse_sort(self):
+        schema = {
+            "keys": ['slug'],
+            "sort": ["-difficulty"]
+        }
+        expected = [
+            'reverse-string',
+            'wordy',
+            'word-search',
+            'isogram',
+            'pangram',
+            'hello-world',
+            'leap',
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_multiple_sort_keys(self):
+        schema = {
+            "keys": ['slug'],
+            "sort": ["difficulty", '-slug']
+        }
+        expected = [
+            'leap',
+            'hello-world',
+            'pangram',
+            'isogram',
+            'word-search',
+            'wordy',
+            'reverse-string',
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_simple_groupby(self):
+        schema = {
+            "groupby": {
+                "gkey": "difficulty",
+                "keys": ['slug']
+            }
+        }
+        expected = {
+            1: ["leap"],
+            2: ['hello-world'],
+            4: ['isogram', 'pangram'],
+            6: ['word-search'],
+            8: ['reverse-string', 'wordy']
+        }
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_groupby_list_key(self):
+        schema = {
+            "groupby": {
+                "gkey": "topics",
+                "list_key": True,
+                'keys': ['slug']
+            }
+        }
+        expected = {
+            "algorithms": [
+                'isogram',
+                'pangram',
+            ],
+            "booleans": [
+                'leap',
+            ],
+            "conditionals": [
+                'hello-world',
+                'leap',
+                'isogram',
+                'pangram',
+            ],
+            "filtering": [
+                'pangram',
+            ],
+            "logic": [
+                'leap',
+                'pangram',
+                'wordy',
+            ],
+            "loops": [
+                'isogram',
+                'pangram',
+            ],
+            "mathematics": [
+                'wordy',
+            ],
+            "optional_values": [
+                'hello-world',
+            ],
+            "pattern_matching": [
+                'wordy',
+            ],
+            "searching": [
+                'word-search',
+            ],
+            "strings": [
+                'reverse-string',
+                'isogram',
+                'pangram',
+                'word-search',
+            ],
+            "text_formatting": [
+                'hello-world',
+            ],
+        }
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_sort_in_groupby(self):
+        schema = {
+            "groupby": {
+                "gkey": 'difficulty',
+                'keys': ['slug'],
+                'sort': ['-slug']
+            }
+        }
+        expected = {
+            1: ["leap"],
+            2: ['hello-world'],
+            4: ['pangram', 'isogram'],
+            6: ['word-search'],
+            8: ['wordy', 'reverse-string']
+        }
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_nested_groupby(self):
+        schema = {
+            'groupby': {
+                'gkey': 'difficulty',
+                'groupby': {
+                    'gkey': 'topics',
+                    'list_key': True,
+                    'keys': ['slug']
+                }
+            }
+        }
+        expected = {
+            1: {
+
+                "conditionals": ['leap'],
+                "booleans": ['leap'],
+                "logic": ['leap'],
+            },
+            2: {
+                "conditionals": ['hello-world'],
+                "optional_values": ['hello-world'],
+                "text_formatting": ['hello-world'],
+            },
+            4: {
+                "algorithms": ['isogram', 'pangram'],
+                "conditionals": ['isogram', 'pangram'],
+                "filtering": ['pangram'],
+                "logic": ['pangram'],
+                "loops": ['isogram', 'pangram'],
+                "strings": ['isogram', 'pangram'],
+            },
+            6: {
+                "strings": ['word-search'],
+                "searching": ['word-search'],
+            },
+            8: {
+                "logic": ['wordy'],
+                "mathematics": ['wordy'],
+                "pattern_matching": ['wordy'],
+                "strings": ['reverse-string'],
+            },
+        }
+        self.assertEqual(dice(data, schema), expected)
+
+
+if __name__ == '__main__':
+    unittest.main()
