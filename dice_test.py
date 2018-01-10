@@ -479,6 +479,20 @@ class TestDice(unittest.TestCase):
         ]
         self.assertEqual(dice(article, schema), expected)
 
+    def test_error_select_on_list(self):
+        schema = {
+            'select': 'slug'
+        }
+        with self.assertRaises(TypeError):
+            dice(data, schema)
+
+    def test_error_non_select_on_dictionary(self):
+        schema = {
+            'keys': ['title', 'author']
+        }
+        with self.assertRaises(TypeError):
+            dice(select_data, schema)
+
 
 if __name__ == '__main__':
     unittest.main()
