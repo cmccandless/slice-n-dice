@@ -92,10 +92,35 @@ data = [
     },
 ]
 
+select_data = {
+    'title': 'My title',
+    'author': 'jdoe',
+    'comments': [
+        {
+            'author': 'jqpublic',
+            'body': 'Good stuff!',
+            'votes': 10,
+            'month': 10
+        },
+        {
+            'author': 'jqpublic',
+            'body': 'More good stuff!',
+            'votes': 90,
+            'month': 8
+        },
+        {
+            'author': 'tjones',
+            'body': 'Not again.',
+            'votes': 90,
+            'month': 7
+        },
+    ]
+}
+
 
 class TestDice(unittest.TestCase):
-    def setUp(self):
-        self.maxDiff = 1300
+    # def setUp(self):
+    #     self.maxDiff = 1300
 
     def test_single_key(self):
         schema = {
@@ -309,6 +334,164 @@ class TestDice(unittest.TestCase):
             },
         }
         self.assertEqual(dice(data, schema), expected)
+
+    def test_unknown_gkey(self):
+        schema = {
+            'groupby': {
+                'gkey': 'submissions'
+            }
+        }
+        with self.assertRaises(KeyError):
+            dice(data, schema)
+
+    def test_select(self):
+        schema = {
+            'select': {
+                'skey': 'comments'
+            }
+        }
+        expected = [
+            {
+                'author': 'jqpublic',
+                'body': 'Good stuff!',
+                'votes': 10,
+                'month': 10
+            },
+            {
+                'author': 'jqpublic',
+                'body': 'More good stuff!',
+                'votes': 90,
+                'month': 8
+            },
+            {
+                'author': 'tjones',
+                'body': 'Not again.',
+                'votes': 90,
+                'month': 7
+            },
+        ]
+        self.assertEqual(dice(select_data, schema), expected)
+
+    def test_select_sort(self):
+        schema = {
+            'select': {
+                'skey': 'comments',
+                'sort': ['-votes', 'month'],
+            }
+        }
+        expected = [
+            {
+                'author': 'tjones',
+                'body': 'Not again.',
+                'votes': 90,
+                'month': 7
+            },
+            {
+                'author': 'jqpublic',
+                'body': 'More good stuff!',
+                'votes': 90,
+                'month': 8
+            },
+            {
+                'author': 'jqpublic',
+                'body': 'Good stuff!',
+                'votes': 10,
+                'month': 10
+            },
+        ]
+        self.assertEqual(dice(select_data, schema), expected)
+
+    def test_select_groupby(self):
+        schema = {
+            'select': {
+                'skey': 'comments',
+                'groupby': {
+                    'gkey': 'votes',
+                    'groupby': {
+                        'gkey': 'author',
+                    }
+                }
+            }
+        }
+        expected = {
+            10: {
+                'jqpublic': [
+                    {
+                        'author': 'jqpublic',
+                        'body': 'Good stuff!',
+                        'votes': 10,
+                        'month': 10
+                    },
+                ]
+            },
+            90: {
+                'tjones': [
+                    {
+                        'author': 'tjones',
+                        'body': 'Not again.',
+                        'votes': 90,
+                        'month': 7
+                    },
+                ],
+                'jqpublic': [
+                    {
+                        'author': 'jqpublic',
+                        'body': 'More good stuff!',
+                        'votes': 90,
+                        'month': 8
+                    },
+                ]
+            }
+        }
+        self.assertEqual(dice(select_data, schema), expected)
+
+    def test_nested_select(self):
+        schema = {
+            'select': {
+                'skey': 'article',
+                'select': {
+                    'skey': 'comments'
+                }
+            }
+        }
+        article = {
+            'article': select_data
+        }
+        expected = [
+            {
+                'author': 'jqpublic',
+                'body': 'Good stuff!',
+                'votes': 10,
+                'month': 10
+            },
+            {
+                'author': 'jqpublic',
+                'body': 'More good stuff!',
+                'votes': 90,
+                'month': 8
+            },
+            {
+                'author': 'tjones',
+                'body': 'Not again.',
+                'votes': 90,
+                'month': 7
+            },
+        ]
+        self.assertEqual(dice(article, schema), expected)
+
+    def test_error_select_on_list(self):
+        schema = {
+            'select': 'slug'
+        }
+        with self.assertRaises(TypeError):
+            dice(data, schema)
+
+    def test_error_non_select_on_dictionary(self):
+        schema = {
+            'keys': ['title', 'author']
+        }
+        with self.assertRaises(TypeError):
+            dice(select_data, schema)
 
 
 if __name__ == '__main__':

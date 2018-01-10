@@ -1,7 +1,11 @@
-import json
-
-
 def dice(data, schema):
+    if 'select' in schema:
+        schema = schema['select']
+        if not isinstance(data, dict):
+            raise TypeError('can only select from a dictionary')
+        return dice(data[schema['skey']], schema)
+    elif not isinstance(data, list):
+        raise TypeError('data is not a list')
     for key in reversed(schema.get('sort', [])):
         reverse = key[:1] == '-'
         key = key.lstrip('-')
@@ -50,12 +54,3 @@ def dice(data, schema):
             for k in keys
         }
     return data
-
-
-if __name__ == '__main__':
-    with open('config.json') as f:
-        data = json.load(f)
-
-    with open('schema.json') as f:
-        schema = json.load(f)
-    print(dice(data, schema))
