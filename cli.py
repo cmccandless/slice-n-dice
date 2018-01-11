@@ -17,4 +17,4 @@ with open(opts.data_file) as f:
 with open(opts.schema, 'r') as f:
     schema = json.load(f)
 
-print(json.dumps(dice(data, schema)))
+print(json.dumps(dice(data, schema), indent=2))
