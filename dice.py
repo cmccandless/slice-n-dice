@@ -1,3 +1,6 @@
+from query_parser import matches
+
+
 def dice(data, schema):
     if 'select' in schema:
         schema = schema['select']
@@ -6,13 +9,17 @@ def dice(data, schema):
         return dice(data[schema['skey']], schema)
     elif not isinstance(data, list):
         raise TypeError('data is not a list')
+
+    if 'where' in schema:
+        data = matches(data, schema['where'])
+
     for key in reversed(schema.get('sort', [])):
         reverse = key[:1] == '-'
         key = key.lstrip('-')
         print(key, reverse)
         data = sorted(
             data,
-            key=lambda e: e[key],
+            key=lambda e: e.get(key, 0),
             reverse=reverse
         )
     if 'keys' in schema:

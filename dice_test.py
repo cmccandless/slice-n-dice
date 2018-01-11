@@ -493,6 +493,51 @@ class TestDice(unittest.TestCase):
         with self.assertRaises(TypeError):
             dice(select_data, schema)
 
+    def test_where_defined(self):
+        schema = {
+            'where': '#difficulty',
+            'keys': ['slug']
+        }
+        filter_data = list(data)
+        filter_data.append({
+            'slug': 'no_difficulty'
+        })
+        expected = [
+            'hello-world',
+            'leap',
+            'reverse-string',
+            'isogram',
+            'pangram',
+            'word-search',
+            'wordy'
+        ]
+        self.assertEqual(dice(filter_data, schema), expected)
+
+    def test_where_gt(self):
+        schema = {
+            'where': 'difficulty>5',
+            'keys': ['slug']
+        }
+        expected = [
+            'reverse-string',
+            'word-search',
+            'wordy'
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
+    def test_where_contains(self):
+        schema = {
+            'where': 'topics has "strings"',
+            'keys': ['slug']
+        }
+        expected = [
+            'reverse-string',
+            'isogram',
+            'pangram',
+            'word-search',
+        ]
+        self.assertEqual(dice(data, schema), expected)
+
 
 if __name__ == '__main__':
     unittest.main()
